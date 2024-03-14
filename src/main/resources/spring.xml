@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
+
+        <bean id="dataSource"
+              class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+
+            <property name="driverClassName" value="org.h2.Driver"/>
+            <property name="url" value="jdbc:h2:~/recipes.db" />
+            <property name="username" value="sa"/>
+            <property name="password" value=""/>
+         </bean>
+
+    <jdbc:initialize-database>
+        <jdbc:script location="classpath:schema.sql"/>
+    </jdbc:initialize-database>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <tx:annotation-driven/>
+
+    <context:component-scan base-package="sbrt.preppy.lesson_18.Dao"/>
+
+    <bean id="ingredientMapper" class="sbrt.preppy.lesson_18.Dao.mapRow.IngredientMapper"/>
+    <bean id="recipeMapper" class="sbrt.preppy.lesson_18.Dao.mapRow.RecipeMapper"/>
+    <bean id="unitMapper" class="sbrt.preppy.lesson_18.Dao.mapRow.UnitMapper"/>
+    <bean id="compositionEntryMapper" class="sbrt.preppy.lesson_18.Dao.mapRow.CompositionEntryMapper">
+        <constructor-arg ref="ingredientDaoImpl"/>
+        <constructor-arg ref="unitDaoImpl"/>
+    </bean>
+
+    <bean id="ingredientDaoImpl"
+          class="sbrt.preppy.lesson_18.Dao.IngredientDaoImpl">
+        <constructor-arg ref="dataSource"/>
+        <constructor-arg ref="ingredientMapper"/>
+    </bean>
+
+    <bean id="recipeDaoImpl"
+          class="sbrt.preppy.lesson_18.Dao.RecipeDaoImpl">
+        <constructor-arg ref="dataSource"/>
+        <constructor-arg ref="recipeMapper"/>
+    </bean>
+
+    <bean id="unitDaoImpl"
+          class="sbrt.preppy.lesson_18.Dao.UnitDaoImpl">
+        <constructor-arg ref="dataSource"/>
+        <constructor-arg ref="unitMapper"/>
+    </bean>
+
+    <bean id="compositionDaoImpl"
+          class="sbrt.preppy.lesson_18.Dao.CompositionDaoImpl">
+        <constructor-arg ref="dataSource"/>
+        <constructor-arg ref="compositionEntryMapper"/>
+        <constructor-arg ref="ingredientDaoImpl"/>
+        <constructor-arg ref="recipeDaoImpl"/>
+        <constructor-arg ref="unitDaoImpl"/>
+    </bean>
+
+    <bean id="ingredient"
+          class="sbrt.preppy.lesson_18.model.Ingredient"
+          scope="prototype"/>
+
+    <bean id="recipe"
+          class="sbrt.preppy.lesson_18.model.Recipe"
+          scope="prototype"/>
+
+    <bean id="unit"
+          class="sbrt.preppy.lesson_18.model.Unit"
+          scope="prototype"/>
+
+    <bean id="composition"
+          class="sbrt.preppy.lesson_18.model.Composition"
+          scope="prototype"/>
+
+    <bean id="compositionEntry"
+          class="sbrt.preppy.lesson_18.model.CompositionEntry"
+          scope="prototype"/>
+
+    <bean id="RecipeBook"
+          class="sbrt.preppy.lesson_18.service.ServiceBook">
+        <constructor-arg ref="compositionDaoImpl"/>
+        <constructor-arg ref="ingredientDaoImpl"/>
+        <constructor-arg ref="recipeDaoImpl"/>
+        <constructor-arg ref="unitDaoImpl"/>
+    </bean>
+</beans>
